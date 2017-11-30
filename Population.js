@@ -1,112 +1,163 @@
 
 
-function Population (snakes) {
+// global reference to population object
+var population;
+// global reference to food array
+var food;
 
-	this.popsize = POPULATION_SIZE;
-	this.maxfit = 0;
-	this.averageFitness = 0;
+// gui
+var gui;
+// gui defaults
+var generations = 25;
 
-	if (snakes) {
-		this.snakes = snakes;
-	} else {
-		this.snakes = new Array(this.popsize);
-		for (var i = 0; i < this.popsize; i++) {
-			this.snakes[i] = new Snake();
+// how many food objects to put on the map
+const NUMBER_OF_FOODS = 15;
+
+// canvas parameters
+var COURSE_WIDTH = 1900;
+var COURSE_HEIGHT = 1000;
+var course;
+// Window parameters
+var WINDOW_WIDTH = 2300;
+var WINDOW_HEIGHT = 1500;
+
+//diameter of body parts
+var BODY_PARTS = 26
+
+// 
+var MAXFIT = 1;
+var MUTATION_RATE = 0;
+var LONGEST_LIVING = 0;
+
+var LIFESPAN = 5000;
+
+// population size of each generation
+const POPULATION_SIZE = 1;
+
+var count = 0;
+
+/*
+*****************************************************************************************
+SETUP
+*****************************************************************************************
+*/
+
+function setup() {
+
+	// setup the gui
+	gui = createGui('something', COURSE_WIDTH);
+
+	// set up course;
+	course = createVector(COURSE_WIDTH, COURSE_HEIGHT);
+
+	// gui buttons
+	gui.prototype.addButton('RUN ONE GENERATION', runGeneration);
+
+	sliderRange(10, 300, 1);
+	gui.addGlobals('generations');
+
+	gui.prototype.addButton('CHARGE LAZARS', function () {
+		console.log('running');
+		var num = 0;
+		while (num <= gui.prototype.getNumberValue('generations')) {
+			runGeneration();
+			if (num % 50 === 0) {
+				console.log('.......')
+			}
+			num++;
 		}
+		console.log('done');
+	});
+
+
+	// create our population
+	population = new Population();
+
+	console.log(population)
+
+	// initialize canvas
+	createCanvas(COURSE_WIDTH, COURSE_HEIGHT)
+	noLoop()
+
+	// initialize our food array and put the right number of food items in it
+	food = new Array(NUMBER_OF_FOODS);
+	for (var i = 0; i < NUMBER_OF_FOODS; i++) {
+		food[i] = new Food();
 	}
+
+
+}
+
+/*
+*****************************************************************************************
+DRAW
+*****************************************************************************************
+*/
+
+
+function draw() {
+
 	
+	fill (35);
+	rect(0, 0, COURSE_WIDTH, COURSE_HEIGHT);
 
-	// mating pool array to be filled at the end of a generation
-	this.matingPool = [];
-
-
-	this.update = function () {
-		this.snakes.forEach(function (snake) {
-			if (snake.alive) {
-				snake.update();	
-			}
-		})
+	if (count % 100 === 0) {
+		console.log('....')
 	}
 
-	this.show = function () {
-		this.snakes.forEach(function (snake) {
-			if (snake.alive) {
-				snake.show();	
-			}
-			
-		})
+	if (population.isDead() || count === LIFESPAN) {
+
+
+		population.evaluate();
+		MUTATION_RATE = 1 / population.averageFitness;
+		console.log('mutation rate: ' + MUTATION_RATE);
+		console.log('average: ' + population.averageFitness);
+		population = population.selection();
+
+		count = 0;
 	}
 
-	// returns true if eveery snake in the population has died
-	this.isDead = function () {
-		// returns true if all the snakes in the population are dead
-		return this.snakes.every(function (snake) {
-			return snake.alive ? false : true;
-		})
-	}
-
-	this.evaluate = function () {
-
-		for (var i = 0; i < this.snakes.length; i++) {
-			// if any snakes outlived the LONGEST_LIVING snake, update LONGEST_LIVING.
-			if (this.snakes[i].timeSpentAlive > LONGEST_LIVING) {
-				LONGEST_LIVING = this.snakes[i].timeSpentAlive;
-			}
-			// calculate the fitness of the snake
-			this.snakes[i].calcFitness();
-
-			// Find the fittest snake of this generation
-			if (this.snakes[i].fitness > this.maxfit) {
-				this.maxfit = this.snakes[i].fitness;
-
-			}
-
-		}
-
-		// If the fittest snake of this generation is fitter than the fittest ever, update MAXFIT.
-		if (this.maxfit > MAXFIT) {
-			MAXFIT = this.maxfit;
-		}
-
-		this.averageFitness = (this.snakes.map(function (snake) {
-					return snake.fitness;
-				}).
-				reduce(function (accumulator, fitness) {
-					return accumulator + fitness;
-				}, 0)) / this.snakes.length
-		// create the mating pool based on the fitness of each snake.
-		for (var i = 0; i < this.snakes.length; i++) {
-			var n = this.snakes[i].fitness;
-			if (n === 0) n = 5;
-			for (var j = 0; j < n; j++) {
-				this.matingPool.push(this.snakes[i]);
-			}
-		}
-
-	}
-
-	this.selection = function () {
-		var newSnakes = [];
-
-		for (var i = 0; i < this.snakes.length; i++) {
-			// Choose two random parents from mating pool
-			var parentA = random(this.matingPool);
-			var parentB = random(this.matingPool);
-
-			// create a new child snake from the corssed over dna of the two parents
-			var child = parentA.reproduce(parentB);
-
-			// create a child snake with childaDNA
-			newSnakes[i] = child;
-		}
-
-		var newPopulation = new Population(newSnakes); 
-		for (var i = 0; i < this.matingPool.length; i++) {
-			if (random() < .25) {
-				newPopulation.matingPool.push(this.matingPool[i]);
-			}
-		}
-		return newPopulation;
-	}
+	population.show();
+	population.update();
 	
+	food.forEach(function (food) {
+		food.show();
+	})
+
+	// check for collisions between the snake heads and the food object
+
+	
+	count++;
+}
+
+function runGeneration () {
+
+	while (count < LIFESPAN) {
+
+		if (population.isDead()) break;
+		population.update();
+		count++;
+	}
+	population.evaluate();
+
+	MUTATION_RATE = 1 / (population.averageFitness * 24);
+	console.log('MR ' + MUTATION_RATE);
+	console.log('average: ' + population.averageFitness);
+	console.log('example brain: ');
+	console.log(this.population.snakes[0].snakeBrain);
+	population = population.selection();
+
+	count = 0;
+}
+
+
+
+
+function keyPressed () {
+
+	if (keyCode === RIGHT_ARROW) {
+		loop();
+	} else if (keyCode === LEFT_ARROW) {
+		noLoop();
+	} 
 }

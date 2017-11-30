@@ -14,8 +14,8 @@ var generations = 25;
 const NUMBER_OF_FOODS = 15;
 
 // canvas parameters
-var COURSE_WIDTH = 1900;
-var COURSE_HEIGHT = 1000;
+var COURSE_WIDTH = 2000;
+var COURSE_HEIGHT = 1300;
 var course;
 // Window parameters
 var WINDOW_WIDTH = 2300;
@@ -32,9 +32,16 @@ var LONGEST_LIVING = 0;
 var LIFESPAN = 5000;
 
 // population size of each generation
-const POPULATION_SIZE = 1;
+const POPULATION_SIZE = 20;
+
+// snake brain parameters:
+var WALL_NODES = 5;
+var FOOD_NODE_PAIRS = 3;
+var BODY_NODE_PAIRS = 3;
 
 var count = 0;
+
+var GENERATION = 1;
 
 /*
 *****************************************************************************************
@@ -109,11 +116,11 @@ function draw() {
 
 
 		population.evaluate();
-		MUTATION_RATE = 1 / population.averageFitness;
+		MUTATION_RATE = 1 / (population.averageFitness * 24);
 		console.log('mutation rate: ' + MUTATION_RATE);
 		console.log('average: ' + population.averageFitness);
 		population = population.selection();
-
+		GENERATION++;
 		count = 0;
 	}
 
@@ -141,12 +148,13 @@ function runGeneration () {
 	population.evaluate();
 
 	MUTATION_RATE = 1 / (population.averageFitness * 24);
-	console.log('MR ' + MUTATION_RATE);
+	console.log('MR ' + MUTATION_RATE + 'MAXFIT: ' + MAXFIT);
 	console.log('average: ' + population.averageFitness);
 	console.log('example brain: ');
 	console.log(this.population.snakes[0].snakeBrain);
 	population = population.selection();
-
+	GENERATION++;
+	console.log('generation ' + GENERATION);
 	count = 0;
 }
 

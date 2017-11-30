@@ -142,6 +142,7 @@ function SnakeBrain (input_nodes, hidden_nodes, output_nodes, dna) {
 				})
 			})
 		})
+		
 	}
 
 	/* 

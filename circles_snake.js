@@ -67,7 +67,7 @@ function Snake (snakeBrain) {
 
 	// Keep up with how many foods the snake has eaten
 	this.score = 0;
-	this.timeSpentAlive = 0;
+	this.timeSpentAlive = LIFESPAN;
 	this.fitness = 0;
 
 
@@ -82,7 +82,7 @@ function Snake (snakeBrain) {
 	if (snakeBrain) {
 		this.snakeBrain = snakeBrain;
 	} else {
-		const INPUT_NODES = 20;
+		const INPUT_NODES = WALL_NODES + (FOOD_NODE_PAIRS * 2) + (BODY_NODE_PAIRS * 2);
 		const HIDDEN_NODES = 15;
 		const OUTPUT_NODES = 3;
 
@@ -323,7 +323,7 @@ function Snake (snakeBrain) {
 			for (var i = 0; i < points.length; i++) {
 				if (points[i].x < 0 || points[i].x > COURSE_WIDTH ||
 					points[i].y < 0 || points[i].y > COURSE_HEIGHT) {
-					this.timeSpentAlive = frameCount;
+					this.timeSpentAlive = count;
 					return true;
 				}
 			}
@@ -332,7 +332,7 @@ function Snake (snakeBrain) {
 				for (var j = 2; j < this.bodyParts.length; j++) {
 					if (points[i].x > this.bodyParts[j].position.x - this.diameter/2 && points[i].x < this.bodyParts[j].position.x + this.diameter/2 && 
 						points[i].y > this.bodyParts[j].position.y - this.diameter/2 && points[i].y < this.bodyParts[j].position.y + this.diameter/2) {
-						this.timeSpentAlive = frameCount
+						this.timeSpentAlive = count;
 						return true;
 					}
 				}
@@ -347,7 +347,7 @@ function Snake (snakeBrain) {
 		*/
 
 		calcFitness: function () {
-			this.fitness = this.score * 25;
+			this.fitness = (this.score * 25) + (this.timeSpentAlive / 40) / (GENERATION * 0.5);
 		},
 
 		/*
@@ -359,11 +359,9 @@ function Snake (snakeBrain) {
 		reproduce: function (parentB) {
 			// returns a new snake object with the combined dna of this and parentB mutated
 			var childDNA = this.snakeBrain.crossover(parentB.snakeBrain);
-
-			var childBrain = new SnakeBrain(this.snakeBrain.input_nodes, this.snakeBrain.hidden_nodes, this.snakeBrain.output_nodes, childDNA).mutate();
-
+			var childBrain = new SnakeBrain(this.snakeBrain.input_nodes, this.snakeBrain.hidden_nodes, this.snakeBrain.output_nodes, childDNA);
+			childBrain.mutate();
 			var child = new Snake(childBrain);
-
 			return child;
 		},
 
